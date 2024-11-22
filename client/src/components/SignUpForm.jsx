@@ -24,25 +24,43 @@ const SignUpForm = ({ onClose, switchToLogin }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [localError, setLocalError] = useState("");
+  const [localError, setLocalError] = useState({});
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const navigate = useNavigate();
   const { signup, error: authError } = useAuthStore();
 
+  const validateFields = () => {
+    const errorHandling = {};
+    if (!name) {
+      errorHandling.name = "Username is required";
+    }
+    if (!email) {
+      errorHandling.email = "Email is required";
+    }
+    if (!password) {
+      errorHandling.password = "Password is required";
+    }
+    if (!confirmPassword) {
+      errorHandling.confirmPassword = "Confirm password is required";
+    }
+    if (password !== confirmPassword && password !== "") {
+      errorHandling.confirmPassword = "Passwords do not match";
+    }
+    
+    setLocalError(errorHandling);
+    return errorHandling;
+  };
+
 
   const handleSignUpSubmit = async (e) => {
     e.preventDefault();
+    setHasSubmitted(true);
+    const errors = validateFields();
 
-    if (password !== confirmPassword) {
-      setLocalError("Passwords do not match");
+    if (Object.keys(errors).length > 0) {
       return;
     }
-    if (!name || !email || !password || !confirmPassword) {
-      setLocalError("All fields are required");
-      return;
-    }
-
-    setLocalError("");
 
     try {
       await signup(email, password, name);
@@ -52,6 +70,12 @@ const SignUpForm = ({ onClose, switchToLogin }) => {
       console.error("Sign-up error:", signupError);
     }
   };
+
+  useEffect(() => {
+    if (hasSubmitted) {
+      validateFields();
+    }
+  }, [name, email, password, confirmPassword, hasSubmitted]);
 
   return (
     <Box position="relative" mt="120px" p="4" zIndex="2">
@@ -97,7 +121,7 @@ const SignUpForm = ({ onClose, switchToLogin }) => {
           Welcome to our E-Recipe Hub! <br />
           Sign up here to get started.
         </Text>
-        <FormControl isInvalid={!!localError && !name} mb="4">
+        <FormControl isInvalid={!!localError.name} mb="4">
           <FormLabel>Username</FormLabel>
           <Input
             type="text"
@@ -105,8 +129,10 @@ const SignUpForm = ({ onClose, switchToLogin }) => {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+          {localError.name && <FormErrorMessage>{localError.name}</FormErrorMessage>}
         </FormControl>
-        <FormControl isInvalid={!!localError && !email} mb="4">
+        
+        <FormControl isInvalid={!!localError.email} mb="4">
           <FormLabel>Email</FormLabel>
           <Input
             type="email"
@@ -114,8 +140,10 @@ const SignUpForm = ({ onClose, switchToLogin }) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+          {localError.email && <FormErrorMessage>{localError.email}</FormErrorMessage>}
         </FormControl>
-        <FormControl isInvalid={!!localError && !password} mb="4">
+
+        <FormControl isInvalid={!!localError.password} mb="4">
           <FormLabel>Password</FormLabel>
           <Input
             type="password"
@@ -123,9 +151,12 @@ const SignUpForm = ({ onClose, switchToLogin }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {localError.password && <FormErrorMessage>{localError.password}</FormErrorMessage>}
         </FormControl>
+
         <PasswordStrengthMeter password={password} />
-        <FormControl isInvalid={!!localError && password !== confirmPassword} mb="4">
+
+        <FormControl isInvalid={!!localError.confirmPassword} mb="4">
           <FormLabel>Confirm Password</FormLabel>
           <Input
             type="password"
@@ -133,7 +164,7 @@ const SignUpForm = ({ onClose, switchToLogin }) => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
-          {localError && <FormErrorMessage>{localError}</FormErrorMessage>}
+          {localError.confirmPassword && <FormErrorMessage>{localError.confirmPassword}</FormErrorMessage>}
           {authError && <FormErrorMessage>{authError}</FormErrorMessage>}
         </FormControl>
         <Button type="submit" colorScheme="blue" width="100%">

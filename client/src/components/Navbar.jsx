@@ -23,7 +23,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import LoginForm from "./LoginForm";
 import SignUpForm from "./SignUpForm";
 import { useAuthStore } from "../store/authStore";
-//import ProfileForm from "./ProfileForm";
+import ProfileForm from "./ProfileForm";
 
 const MotionBox = motion(Box);
 
@@ -33,6 +33,7 @@ const Navbar = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const { isAuthenticated, logout } = useAuthStore();
   const [isSearchBarActive, setIsSearchBarActive] = useState(false);
+  const { isOpen: isOpenProfile, onOpen: onOpenProfile, onClose: onCloseProfile } = useDisclosure();
   const location = useLocation();
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -57,6 +58,10 @@ const Navbar = () => {
 
   const toggleSearchBar = () => {
     setIsSearchBarActive(!isSearchBarActive);
+  };
+
+  const openProfileForm = () => {
+      onOpenProfile();
   };
 
   const handleLogout = () => {
@@ -193,7 +198,7 @@ const Navbar = () => {
                 _hover={{ bg: "whiteAlpha.200" }} 
               /> 
               <MenuList bg="gray.800" color="black"> 
-                <MenuItem _hover={{ bg: "orange.300" }}> 
+                <MenuItem onClick={openProfileForm} _hover={{ bg: "orange.300" }}> 
                   Profile 
                 </MenuItem> 
                 <MenuItem onClick={handleLogout} _hover={{ bg: "orange.300" }}> 
@@ -201,6 +206,9 @@ const Navbar = () => {
                 </MenuItem> 
               </MenuList> 
             </Menu>
+
+            {/* Profile Modal*/}
+            <ProfileForm isOpen={isOpenProfile} onClose={onCloseProfile} />
           </>
         ) : (
           <>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Text,
@@ -22,27 +22,49 @@ const LoginForm = ({onClose, switchToSignUp}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [formError, setFormError] = useState("");
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const { login, isLoading, error } = useAuthStore();
 
+  const validateFields = () => {
+    const errorHandling = {};
+
+    if (!email) {
+      errorHandling.email = "Email is required";
+    }
+    if (!password) {
+      errorHandling.password = "Password is required";
+    }
+    
+    setFormError(errorHandling);
+    return errorHandling;
+  };
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault(); // Prevents page refresh
+    setHasSubmitted(true);
+    const loginError = validateFields();
 
-    // Simple validation for email and password
-    if (!email || !password) {
-      setFormError("Both email and password are required.");
+    if (Object.keys(loginError).length > 0) {
       return;
     }
 
     try {
       await login(email, password);
-      setFormError(""); // Clear error if valid
+      setFormError({}); // Clear error if valid
       console.log("Login successful:", { email, password });
       onClose();
     } catch (err) {
       console.error("Login failed:", err);
+      setFormError({ message: "Invalid credentials" });
     }
   };
+
+  useEffect(() => {
+    if (hasSubmitted) {
+      validateFields();
+    }
+  },[email, password]);
 
   return (
     <Box position="relative" mt="120px" p="4" zIndex="2">
@@ -77,11 +99,11 @@ const LoginForm = ({onClose, switchToSignUp}) => {
         src={pizza}
         alt="Pizza"
         position="absolute"
-        bottom={{ base: "140px", md: "130px" }}
-        right={{ base: "-18px", md: "-58px" }}
+        bottom={{ base: "220px", md: "240px" }}
+        right={{ base: "-18px", md: "-50px" }}
         width={{ base: "104px", md: "110px" }}
         initial={{ opacity: 0, x: -180, y: -100, rotate: -60 }}
-        animate={{ opacity: 1, x: 0, y: -206, rotate: 10 }}
+        animate={{ opacity: 1, x: 0, y: -160, rotate: 10 }}
         transition={{ duration: 1, delay: 0.4 }}
       />
 
@@ -91,7 +113,7 @@ const LoginForm = ({onClose, switchToSignUp}) => {
           Login here to continue.
         </Text>
 
-        <FormControl isInvalid={!!formError} mb="4">
+        <FormControl isInvalid={!!formError.email} mb="4">
           <FormLabel>Email</FormLabel>
           <Input
             type="email"
@@ -99,10 +121,10 @@ const LoginForm = ({onClose, switchToSignUp}) => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
           />
-          {formError && <FormErrorMessage>Email is required to fill</FormErrorMessage>}
+          {formError.email && <FormErrorMessage>{formError.email}</FormErrorMessage>}
         </FormControl>
 
-        <FormControl isInvalid={!!formError} mb="4">
+        <FormControl isInvalid={!!formError.password} mb="4">
           <FormLabel>Password</FormLabel>
           <Input
             type="password"
@@ -110,7 +132,7 @@ const LoginForm = ({onClose, switchToSignUp}) => {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
           />
-          {formError && <FormErrorMessage>Password is required to fill</FormErrorMessage>}
+          {formError.password && <FormErrorMessage>{formError.password}</FormErrorMessage>}
         </FormControl>
 
         <Box justify="space-between" align="center" mb={2} opacity={0.8} display={"flex"}>
@@ -121,7 +143,21 @@ const LoginForm = ({onClose, switchToSignUp}) => {
           </Text>
         </Box>
 
-        {error && <p className='text-red-500 font-semibold mb-2'>{error}</p>}
+        {error && (
+          <p 
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "red",
+              fontWeight: "bold",
+              fontSize: "12px",
+              marginBottom: "8px",
+            }}
+          >
+            {formError.message}
+          </p>
+        )}   
 
         <Button
           type="submit"
